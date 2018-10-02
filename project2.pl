@@ -25,6 +25,40 @@ main(PuzzleFile, WordlistFile, SolutionFile) :-
 solve_puzzle(Puzzle, _, Puzzle).
 
 
+% TODO: 首先要把 puzzle 转换成variable 填充进去。 
+% Prepare the pusslze with logical variable.
+% TODO: 填充的时候是按照行的顺序吧？？？大概。 
+
+
+%%% Test Line : [[’#’,’_’,’#’], [’_’,’_’,’_’], [’#’,’_’,’#’]]
+convert_variable(Puzzle, FilledPuzzle):-
+    convert_variable(Puzzle, [], FilledPuzzle).
+convert_variable([], Acc, Acc).
+convert_variable([H|Rest], Acc, FilledPuzzle):-
+    horizontal_variable(H,RowVar),
+    append(Acc, [RowVar], NewAcc),
+    convert_variable(Rest, NewAcc, FilledPuzzle).
+
+
+
+horizontal_variable(R, Filled):-
+    horizontal_variable(R,[], Filled).
+horizontal_variable([],Acc, Acc).
+% TODO: 如果遇到了‘#’ 那么直接append， 遇到了’_‘再加var。
+horizontal_variable([H|Rest], Acc, Filled):-
+    % An underscore means we need to add a free var. 
+    (H = '_'
+        ->
+        FreeSlot = slot(_);
+        % Just add '#' when see it. Append it to the NewAcc. 
+        H = '#'
+        -> 
+        append(Acc, [H], NewAcc);
+        FreeSlot = slot(H)
+    ),
+    append(Acc, [FreeSlot], NewAcc),
+    horizontal_variable(Rest, NewAcc, Filled).
+
 
 % TODO: Need to change to tail recursive to improve efficiency. 
 qsort([],[]).
