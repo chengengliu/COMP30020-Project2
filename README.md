@@ -8,7 +8,10 @@ Some rought process can be:
     even is the beginning of the brute force. )
 
     2.  finding slots in wich to put those words. 
+
     3.  generate words with the corresponding order that maybe correct word for each slot. 
+
     4.  these slots are sorted(somehow I don't know how to implement sorting yet in prolog, but 
     possibly since we have implemented that in workshop. ).
+    
     5.  After sorting, pick up the slot with the fewest possible words. 
