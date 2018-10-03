@@ -8,27 +8,22 @@ main(PuzzleFile, WordlistFile, SolutionFile) :-
 	read_file(PuzzleFile, Puzzle),
 	read_file(WordlistFile, Wordlist),
 	valid_puzzle(Puzzle),
-	solve_puzzle(Puzzle, Wordlist, Solved),
-	print_puzzle(SolutionFile, Solved).
+	solve_puzzle(Puzzle, Wordlist, Solved).
+	%print_puzzle(SolutionFile, Solved).
 
-% solve_puzzle(Puzzle0, WordList, Puzzle)
-% should hold when Puzzle is a solved version of Puzzle0, with the
-% empty slots filled in with words from WordList.  Puzzle0 and Puzzle
-% should be lists of lists of characters (single-character atoms), one
-% list per puzzle row.  WordList is also a list of lists of
-% characters, one list per word.
-%
-% This code is obviously wrong: it just gives back the unfilled puzzle
-% as result.  You'll need to replace this with a working
-% implementation.
+%% Simple output predicate, 
+write_test(File, Text):-
+    open(File, write, Stream),
+    write(Stream, Text), 
+    close(Stream).
 
-solve_puzzle(Puzzle, _, Puzzle).
-
+solve_puzzle(Puzzle, _, Puzzle):-
+    convert_variable(Puzzle,FilledPuzzle),
+    write_test('result1.txt', FilledPuzzle).
 
 % TODO: 首先要把 puzzle 转换成variable 填充进去。 
 % Prepare the pusslze with logical variable.
 % TODO: 填充的时候是按照行的顺序吧？？？大概。 
-
 
 %%% Test Line : [[’#’,’_’,’#’], [’_’,’_’,’_’], [’#’,’_’,’#’]]
 convert_variable(Puzzle, FilledPuzzle):-
@@ -39,8 +34,6 @@ convert_variable([H|Rest], Acc, FilledPuzzle):-
     append(Acc, [RowVar], NewAcc),
     convert_variable(Rest, NewAcc, FilledPuzzle).
 
-
-
 horizontal_variable(R, Filled):-
     horizontal_variable(R,[], Filled).
 horizontal_variable([],Acc, Acc).
@@ -49,12 +42,12 @@ horizontal_variable([H|Rest], Acc, Filled):-
     % An underscore means we need to add a free var. 
     (H = '_'
         ->
-        FreeSlot = slot(_);
+        FreeSlot = var(_);
         % Just add '#' when see it. Append it to the NewAcc. 
         H = '#'
-        -> 
+        ->  % Else we put an extra variable into the new Accumulator. 
         append(Acc, [H], NewAcc);
-        FreeSlot = slot(H)
+        FreeSlot = var(H)
     ),
     append(Acc, [FreeSlot], NewAcc),
     horizontal_variable(Rest, NewAcc, Filled).
@@ -106,3 +99,13 @@ valid_puzzle([Row|Rows]) :-
 samelength([], []).
 samelength([_|L1], [_|L2]) :-
 	same_length(L1, L2).
+% solve_puzzle(Puzzle0, WordList, Puzzle)
+% should hold when Puzzle is a solved version of Puzzle0, with the
+% empty slots filled in with words from WordList.  Puzzle0 and Puzzle
+% should be lists of lists of characters (single-character atoms), one
+% list per puzzle row.  WordList is also a list of lists of
+% characters, one list per word.
+%
+% This code is obviously wrong: it just gives back the unfilled puzzle
+% as result.  You'll need to replace this with a working
+% implementation.
