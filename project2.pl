@@ -23,8 +23,9 @@ solve_puzzle(Puzzle, _, Puzzle):-
 
 % TODO: 首先要把 puzzle 转换成variable 填充进去。 
 % Prepare the pusslze with logical variable.
-% TODO: 填充的时候是按照行的顺序吧？？？大概。 
-
+%  填充的时候是按照行的顺序吧？？？大概。 
+% TODO: 10/4 ntoes: It seems works fine when checking 
+% main('test2.txt','words1.txt','result1.txt'). with test files. 
 %%% Test Line : [[’#’,’_’,’#’], [’_’,’_’,’_’], [’#’,’_’,’#’]]
 convert_variable(Puzzle, FilledPuzzle):-
     convert_variable(Puzzle, [], FilledPuzzle).
@@ -37,7 +38,7 @@ convert_variable([H|Rest], Acc, FilledPuzzle):-
 horizontal_variable(R, Filled):-
     horizontal_variable(R,[], Filled).
 horizontal_variable([],Acc, Acc).
-% TODO: 如果遇到了‘#’ 那么直接append， 遇到了’_‘再加var。
+%  如果遇到了‘#’ 那么直接append， 遇到了’_‘再加var。
 horizontal_variable([H|Rest], Acc, Filled):-
     % An underscore means we need to add a free var. 
     (H = '_'
@@ -52,7 +53,63 @@ horizontal_variable([H|Rest], Acc, Filled):-
     append(Acc, [FreeSlot], NewAcc),
     horizontal_variable(Rest, NewAcc, Filled).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/**
+ * Now it is the job to get the free position from the puzzle. 
+ * Meanwhile it is important to do the 90 degree rotation . 
+ * This is done by 
+ * 1. Look through each row (horizontally)
+ * 2. Transposed the puzzle(Rotate 90 degree). After doing so, there will be some 
+ * common variables that are being used by both rows and columns. 
+ * */
 
+get_all_slots(FilledPuzzle, ListOfSlots):-
+    get_slots(FilledPuzzle, HorizontalSlots),
+    transpose(FilledPuzzle, VerticalPuzzle),
+    get_slots(VerticalPuzzle, VerticalSlots),
+    append(HorizontalSlots, VerticalSlots).
+
+
+/**
+ * Take a pusslze that is already filled with logical variables (FilledPuzzle)
+ * and firstly check the rows. 
+*/
+get_slots(FilledPuzzle, FilledSlots):-
+    get_slots(FilledPuzzle,[], FilledSlots).
+% Base case. No rows left. 
+get_slots([], Acc, Acc).
+% H is a single row. 
+get_slots([H|Rest], Acc, FilledSlots):-
+    get_slots_oneRow(H, TempFilledSlots),
+    % TODO: What happened if the row has no slots? 
+    %%%% Create a new variable .
+    append(Acc, TempFilledSlots, NewFilledSlots),
+    get_slots(Rest, NewFilledSlots, Slots).
+
+
+/**
+ * Get slots from one row. 
+ * Slots : List of slots for the row. 
+ * 
+*/
+get_slots_oneRow(Row, Slots):-
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TODO: Need to change to tail recursive to improve efficiency. 
 qsort([],[]).
 qsort([H|T], Sorted):-
