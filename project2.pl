@@ -33,6 +33,7 @@ write_test(File, Text):-
 
 solve_puzzle(Puzzle, _, FilledPuzzle):-
     fill_with_vars(Puzzle,FilledPuzzle),
+    construct_slots(FilledPuzzle,Slots),
     write_test('result1.txt', FilledPuzzle).
 
 
@@ -51,6 +52,45 @@ fill_row_with_vars(Row, FilledRow):-
 % The same. 
 fill_underscore_var('_', _).
 fill_underscore_var(Char, Char):- Char \= '_'.
+
+
+% After we have all the undersocres replaced with logical variables, 
+% It is time to construct slots from the filledPuzzle. 
+% Format is like [[#,_3366,#],[_3384,A,_3396],[#,#,_3420]]
+% Slots if a list of all the slots in both rows and columns of the Puzzle. 
+% This predicate hopefully should find all horizontal and vertical slots 
+% in the puzzle. 
+
+% FilledPuzzle is a list of lists of char, one list per puzzle row. 
+construct_slots(FilledPuzzle, Slots):-
+    rows_slots(FilledPuzzle, HorizontalSlots),
+    transpose(FilledPuzzle, NewFilledPuzzle),
+    rows_slots(NewFilledPuzzle, VerticalSlots),
+    append(HorizontalSlots, VerticalSlots,Slots).
+
+% Slots is a list of all the slots in all Rows of the puzzle. 
+% Rows is a list of lists of Char, one list per row in the puzzle. 
+% puzzle的每一行的slots都会储存到slots里面。
+rows_slots([], []).
+rows_slots([R|Rows], Slots):-
+    one_row_slot(R, RowSlots),
+    append(RowSlots,TempSlots, Slots),
+    rows_slots(Rows, TempSlots).
+/**
+ * one_row_slot/2 will return Slots which contain a list of slots present 
+ * in the Row. aka the Slots is the reuslt of splitting the Row on '#'
+ * one_row_slot/2 calls one_row_slot/3 with a tail recursion (initialising
+     the acc as []).
+*/
+one_row_slot(Row, Slots):-
+    one_row_slot(Row, [], Slots).
+/**
+ * one_row_slot/3 
+*/
+one_row_slot([],[],[]).
+one_row_slot
+
+
 
 
 
