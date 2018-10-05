@@ -85,10 +85,29 @@ rows_slots([R|Rows], Slots):-
 one_row_slot(Row, Slots):-
     one_row_slot(Row, [], Slots).
 /**
- * one_row_slot/3 
+ * one_row_slot/3 return the slots in one row. 
+ * It uses Acc as an accumulator, recursively adding chars into it 
+ * until it meets a '#'. When meeting a '#', it adds the Acc into Slots and 
+ * resets Acc to be empty lists. 
 */
+
 one_row_slot([],[],[]).
-one_row_slot
+% Notice that if there is no '#' at the end of the row, then Acc is made into
+% a list with itself. (This is another base case that i should handle.)
+% TODO:  这个地方很坑。。 
+one_row_slot([], Acc, [Acc]):- 
+    Acc \= [].
+% If there is a '#' add the Acc to the list of slots and reset Acc to an empty
+% list. If not meeting '#' yet, adding to the Acc which represents a single slot 
+% in construction
+one_row_slot([H|Rest], Acc, Slots):-
+    H = '#',
+    Slots = [Acc|Slots1],
+    one_row_slot(Rest,[], Slots1).
+one_row_slot([H|Rest], Acc,Slots):-
+    H \= '#',
+    append(Acc,[H],Acc1),
+    one_row_slot(Rest,Acc1,Slots).
 
 
 
