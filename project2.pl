@@ -33,8 +33,9 @@ write_test(File, Text):-
 
 solve_puzzle(Puzzle, _, FilledPuzzle):-
     fill_with_vars(Puzzle,FilledPuzzle),
+    %write_test('result1.txt', FilledPuzzle),
     construct_slots(FilledPuzzle,Slots),
-    write_test('result1.txt', FilledPuzzle).
+    write_test('result1.txt', Slots).
 
 
 % FilledPuzzle is the same puzzle with the input puzzle, except thst 
@@ -64,9 +65,14 @@ fill_underscore_var(Char, Char):- Char \= '_'.
 % FilledPuzzle is a list of lists of char, one list per puzzle row. 
 construct_slots(FilledPuzzle, Slots):-
     rows_slots(FilledPuzzle, HorizontalSlots),
+    include(length_more_than1,HorizontalSlots,NewHorizontalSlots),
     transpose(FilledPuzzle, NewFilledPuzzle),
     rows_slots(NewFilledPuzzle, VerticalSlots),
-    append(HorizontalSlots, VerticalSlots,Slots).
+    include(length_more_than1,VerticalSlots,NewVerticalSlots),
+    append(NewHorizontalSlots, NewVerticalSlots,Slots).
+length_more_than1(List):-
+    length(List,Length),
+    Length > 1.
 
 % Slots is a list of all the slots in all Rows of the puzzle. 
 % Rows is a list of lists of Char, one list per row in the puzzle. 
@@ -97,15 +103,16 @@ one_row_slot([],[],[]).
 % TODO:  这个地方很坑。。 
 one_row_slot([], Acc, [Acc]):- 
     Acc \= [].
-% If there is a '#' add the Acc to the list of slots and reset Acc to an empty
-% list. If not meeting '#' yet, adding to the Acc which represents a single slot 
-% in construction
+% If there is a '#', add the Acc to the list of slots and reset Acc to an empty
+% list.
 one_row_slot([H|Rest], Acc, Slots):-
-    H = '#',
+    H == '#',
     Slots = [Acc|Slots1],
     one_row_slot(Rest,[], Slots1).
+% If not meeting the '#', keep adding to Acc. 
 one_row_slot([H|Rest], Acc,Slots):-
-    H \= '#',
+    %%%%% I found the bug.......... \==
+    H \== '#',
     append(Acc,[H],Acc1),
     one_row_slot(Rest,Acc1,Slots).
 
