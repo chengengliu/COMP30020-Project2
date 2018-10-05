@@ -17,9 +17,43 @@ write_test(File, Text):-
     write(Stream, Text), 
     close(Stream).
 
-solve_puzzle(Puzzle, _, Puzzle):-
-    convert_variable(Puzzle,FilledPuzzle),
+/**
+ * Now it is time to restate the whole algorithm
+ * The algorithm should be 
+ * 1. Replace all underscores with logical variables. 
+ * 2. Build a list of slots, where each slot is a list of logical var
+ * representing a single square in the puzzle. This step is important 
+ * if the same var is used for the same slot in either hot or ver when
+ * unifying the var, it will be correctly unified hor and ver
+ * 3. Fill in words in to the puzzle until solved. 
+ * Selecting a slot and a word and unifying the word with the slot 
+ * and recursing. Should be careful when choosing the best slot and word. 
+ * 
+*/
+
+solve_puzzle(Puzzle, _, FilledPuzzle):-
+    fill_with_vars(Puzzle,FilledPuzzle),
     write_test('result1.txt', FilledPuzzle).
+
+
+% FilledPuzzle is the same puzzle with the input puzzle, except thst 
+% All '_' will be replaced by logical variable. 
+fill_with_vars([],[]).
+fill_with_vars(Puzzle, FilledPuzzle):-
+    maplist(fill_row_with_vars, Puzzle, FilledPuzzle).
+% Row is a row of an unfilled puzzle, and FilledRow is filled with 
+% Logical variables. 
+fill_row_with_vars([],[]).
+fill_row_with_vars(Row, FilledRow):-
+    maplist(fill_underscore_var, Row, FilledRow).
+
+% Replace all undersocres with logical variables and keep everything else
+% The same. 
+fill_underscore_var('_', _).
+fill_underscore_var(Char, Char):- Char \= '_'.
+
+
+
 
 
 
