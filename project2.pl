@@ -8,8 +8,8 @@ main(PuzzleFile, WordlistFile, SolutionFile) :-
 	read_file(PuzzleFile, Puzzle),
 	read_file(WordlistFile, Wordlist),
 	valid_puzzle(Puzzle),
-	solve_puzzle(Puzzle, Wordlist, Solved).
-	%print_puzzle(SolutionFile, Solved).
+	solve_puzzle(Puzzle, Wordlist, Solved),
+	print_puzzle(SolutionFile, Solved).
 
 %% Simple output predicate, 
 write_test(File, Text):-
@@ -31,12 +31,13 @@ write_test(File, Text):-
  * 
 */
 
-solve_puzzle(Puzzle, _, FilledPuzzle):-
+solve_puzzle(Puzzle, Wordlist, FilledPuzzle):-
     fill_with_vars(Puzzle,FilledPuzzle),
     %write_test('result1.txt', FilledPuzzle),
     construct_slots(FilledPuzzle,Slots),
-    write_test('result1.txt', Slots).
-
+    write_test('result1.txt', Slots),
+    fill_words(Slots, Wordlist).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % FilledPuzzle is the same puzzle with the input puzzle, except thst 
 % All '_' will be replaced by logical variable. 
@@ -54,6 +55,7 @@ fill_row_with_vars(Row, FilledRow):-
 fill_underscore_var('_', _).
 fill_underscore_var(Char, Char):- Char \= '_'.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % After we have all the undersocres replaced with logical variables, 
 % It is time to construct slots from the filledPuzzle. 
@@ -116,14 +118,97 @@ one_row_slot([H|Rest], Acc,Slots):-
     append(Acc,[H],Acc1),
     one_row_slot(Rest,Acc1,Slots).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% fill_words/2 should accept a slots as argument. This predicate comes true if 
+% slots are capable of being filled with Wordlist. 
+% Wordlist is a list of the words that are being filled into the puzzle. 
+% We need to find the best fit slot to place a word into and choose a word to 
+% be placed into that slot.
+% The best slot is defined as the one that has the fewest matching words 
+% in the wordlist. 
 
 
+fill_words([],[]).
+fill_words(Slots, Wordlist):-
+    select_best_slot(Slots, Wordlist, Best),
+    % TODO: Zzz
+    exclude(\=(Best), Wordlist, Match),
+    member(Word, Match),
+    Best = Word,
+    exclude(==(Word), Wordlist, RestOfWords),
+    exclude(==(Best), Slots, RestOfSlots),
+    fill_words(RestOfSlots, RestOfWords).
+    
+/**
+ * select_best_slot/3 will return the best slot, which is defined as the least
+ * amount of matching words that cane be used to fill(this will reduce the 
+     search space and backtrack space)
+ * [H|Rest] is a list of slots in the puzzle. 
+ * Wordlist is a list words being filled into the puzzle. 
+ * Best is the slot with the fewest matching words in the Wordlist.
+ * 
+ * The predicate will use select_best_slot/5, which will try to unify a slot
+ * with a word. (A word is said to be 'match' only when the word could unify
+     the slot).
+ * More explaination will be introduced later.
+ * 
+*/
+select_best_slot([H|Rest], Wordlist, Best):-
+    % count_/3 will return Number as the number of the matching words.
+    % Slot here is considered as the 'temp'-best slot so far. It will
+    % be passed to select_best_slot/5 to test if it is the real best 
+    count_(H, Wordlist, MatchNumber),
+    select_best_slot(Wordlist,MatchNumber, Rest, H, Best).
+    %write_test('result2.txt', MatchNumber).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+/**
+ * count_/3 will call count_/4 with a Acc.
+ * Number is the number of words in the wordlist that can fit in the slot. 
+ * Slot is a slot in the puzzle. 
+ * Wordlist is a list of words being filled into the puzzle. 
+ * The wordlist will be traversed to check if there is one word that can 
+ * be fit into the slot. 
+*/
+count_(Slot, Wordlist, MatchNumber):-
+    count_(Slot, Wordlist, 0, MatchNumber).
 
-
-
-
+/**
+ * Acc is the accumulator
+ * Count will be the total count of the number of words that matching 
+ * the slot. 
+*/
+count_(_,[], Acc, Acc).
+count_(Slot, [W|Wordlist], Acc, MatchNumber):-
+    (Slot \= W->
+        Acc1 is Acc;
+        Acc1 is Acc +1
+    ),
+    count_(Slot, Wordlist, Acc1, MatchNumber).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/**
+ * select_best_slot(Wordlist, MatchNumber, Slots, CBest, Best) is to compute
+ * the best slot. This is the main algorithm
+ * select_best_slot/5 will also use count_ to traverse the wordlist to find
+ * the MatchNumber. It then compute the best slot by selecting the slot 
+ * with the fewest matching words. 
+ * MatchNumber is the number of matching words that the CurrentBest has
+ * If Count < MatchNumber(which the CurrentBest has), then a better slot
+ * that has fewer matching words is found. Change the CurrentBest and the 
+ * MatchNumber then. 
+*/
+select_best_slot(_,_, [], Best, Best).
+select_best_slot(Wordlist, MatchNumber, [S|Slots], CurrentBest, Best):-
+    count_(S, Wordlist, Count),
+    (Count < MatchNumber->
+        CurrentBest1 = S, 
+        MatchNumber1 = Count;
+        CurrentBest1= CurrentBest,
+        MatchNumber1 = MatchNumber
+    ),
+    select_best_slot(Wordlist, MatchNumber1, Slots, CurrentBest1, Best).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -143,7 +228,7 @@ qpartition(Pivot, [E|Rest], [E|Less], Greater):-
 qpartition(Pivot, [E|Rest], Less, [E|Greater]):-
     E > Pivot,
     qpartition(Pivot, Rest, Less, Greater).
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**This is the print out part.  
  * TODO: Maybe later separated into another file.
@@ -173,11 +258,11 @@ valid_puzzle([Row|Rows]) :-
 samelength([], []).
 samelength([_|L1], [_|L2]) :-
 	same_length(L1, L2).
-% solve_puzzle(Puzzle0, WordList, Puzzle)
+% solve_puzzle(Puzzle0, Wordlist, Puzzle)
 % should hold when Puzzle is a solved version of Puzzle0, with the
-% empty slots filled in with words from WordList.  Puzzle0 and Puzzle
+% empty slots filled in with words from Wordlist.  Puzzle0 and Puzzle
 % should be lists of lists of characters (single-character atoms), one
-% list per puzzle row.  WordList is also a list of lists of
+% list per puzzle row.  Wordlist is also a list of lists of
 % characters, one list per word.
 %
 % This code is obviously wrong: it just gives back the unfilled puzzle
