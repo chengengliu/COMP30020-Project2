@@ -1,4 +1,4 @@
-##COMP30020 Declarative Programming Project2 
+## COMP30020 Declarative Programming Project2 
 
 ## This is some basic ideas about the project. 
 Brute forcely making guess is possible but cannot meet the efficiency here. 
