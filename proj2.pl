@@ -1,3 +1,7 @@
+% COMP30020 2018 Declarative Programming Project 2 
+% Student: Chengeng Liu     Student ID : 813174
+% IO-code: Peter Schachte
+
 :- ensure_loaded(library(clpfd)).
 % TODO: file-level doc needs more. 
 /**
@@ -234,55 +238,74 @@ select_best_slot(Wordlist, MatchNumber, [S|Slots], CurrentBest, Best):-
     select_best_slot(Wordlist, MatchNumber1, Slots, CurrentBest1, Best).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% IO part. Printing predicates and Reading predicates. 
+% These predicates are provided from starter.pl written by Peter Schachte
 
-/**This is the print out part.  
- * TODO: Maybe later separated into another file.
- * 
- * 
- * */
+/**
+ * print_puzzle/2 
+ * SolutionFile: name of the file that is being printed to. 
+ * Puzzle: this is passed as Solved when print_puzzle/2 is called. This will 
+ * ensure that the whole Puzzle(Solved) to the SolutionFile. 
+*/
 print_puzzle(SolutionFile, Puzzle) :-
 	open(SolutionFile, write, Stream),
 	maplist(print_row(Stream), Puzzle),
 	close(Stream).
 
+/**
+ * print_row/2 will write the Row to Stream that is provided. 
+ * Stream: an opened file in read mode 
+ * Row: a row fo the solved puzzle. 
+*/
 print_row(Stream, Row) :-
 	maplist(put_puzzle_char(Stream), Row),
 	nl(Stream).
-
+/**
+ * put_puzzle_char/2 will write '_' to the Stream if Char is a var. 
+ * If Char is not a var, it will write the Char itself to the Stream. 
+ * Stream: an opened file in read mode
+ * Char: a char
+*/
 put_puzzle_char(Stream, Char) :-
 	(   var(Char)
 	->  put_char(Stream, '_')
 	;   put_char(Stream, Char)
 	).
-
+/**
+ * valid_puzzle/1 verifies that each row in the puzzle has the same 
+ * length. 
+ * Rows: a list of lists and each of the list has the same length. 
+*/
 valid_puzzle([]).
 valid_puzzle([Row|Rows]) :-
 	maplist(samelength(Row), Rows).
 
-
+/**
+ * samelength/2 verifies two lists have the same length. 
+*/
 samelength([], []).
 samelength([_|L1], [_|L2]) :-
 	same_length(L1, L2).
-% solve_puzzle(Puzzle0, Wordlist, Puzzle)
-% should hold when Puzzle is a solved version of Puzzle0, with the
-% empty slots filled in with words from Wordlist.  Puzzle0 and Puzzle
-% should be lists of lists of characters (single-character atoms), one
-% list per puzzle row.  Wordlist is also a list of lists of
-% characters, one list per word.
-%
-% This code is obviously wrong: it just gives back the unfilled puzzle
-% as result.  You'll need to replace this with a working
-% implementation.
 
+/**
+ * read_file/2 will read all contents from Filename line by line. 
+ * Filename: name of the file that is being read. 
+ * Content: list of list of characters. 
+*/
 
 read_file(Filename, Content) :-
 	open(Filename, read, Stream),
 	read_lines(Stream, Content),
 	close(Stream).
 
+/**
+ * read_lines/2 will read all lines of the file. 
+ * Stream: an opened file in read mode. 
+ * Content: list of list of chars. One string per line of the opened stream. 
+*/
 read_lines(Stream, Content) :-
 	read_line(Stream, Line, Last),
-	(   Last = true
+	(   Last = true  % end of file
 	->  (   Line = []
 	    ->  Content = []
 	    ;   Content = [Line]
@@ -290,15 +313,23 @@ read_lines(Stream, Content) :-
 	;  Content = [Line|Content1],
 	    read_lines(Stream, Content1)
 	).
-
+/**
+ * read_line/3 will read a line. Last is a flag, which shows whether the line 
+ * is the last line of the file or not. 
+ * Stream: an opend file in read mode. 
+ * Line: a line of the file that is being read
+ * Last: true/false, works like a boolean type. True if it meets the end of file,
+ * False if it meets a newline char. 
+ * 
+*/
 read_line(Stream, Line, Last) :-
 	get_char(Stream, Char),
-	(   Char = end_of_file
+	(   Char = end_of_file  % End of file
 	->  Line = [],
 	    Last = true
-	; Char = '\n'
+	; Char = '\n'  % Newline 
 	->  Line = [],
 	    Last = false
-	;   Line = [Char|Line1],
+	;   Line = [Char|Line1],   % Normal read.
 	    read_line(Stream, Line1, Last)
 	).
