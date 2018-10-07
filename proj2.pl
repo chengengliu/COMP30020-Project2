@@ -2,22 +2,40 @@
 % Student: Chengeng Liu     Student ID : 813174
 % IO-code: Peter Schachte
 
-:- ensure_loaded(library(clpfd)).
-% TODO: file-level doc needs more. 
-/**
- * Now it is time to restate the whole algorithm
- * The algorithm should be 
- * 1. Replace all underscores with logical variables. 
- * 2. Build a list of slots, where each slot is a list of logical var
- * representing a single square in the puzzle. This step is important 
- * if the same var is used for the same slot in either hot or ver when
- * unifying the var, it will be correctly unified hor and ver
- * 3. Fill in words in to the puzzle until solved. 
- * Selecting a slot and a word and unifying the word with the slot 
- * and recursing. Should be careful when choosing the best slot and word. 
- * 
-*/
+% This is the program for Fillin Puzzles. 
+% The program tries to solve a Fillin Puzzle.
+% A Fillin Puzzle is to provide a puzzle and a list of words, which 
+% the player needs to select words to fit in the given puzzle. 
+% main/3 and IO-code is provided by Peter Schachte.
+% We are asked to implement solve_puzzle/3 to solve the Fillin Puzzle. 
 
+% Algorithm used for solve_puzzle/3 is written below. 
+% Further algorithm explaination will be written in more depth later 
+% of the program. 
+% 1. Replace all underscores with logical variables. 
+% 2. Build a list of slots, where each slot is a list of logical var
+% representing a single square in the puzzle. This step is important 
+% if the same var is used for the same slot in either horizontal or vertical
+% direction when unifying the var, it will be correctly unified 
+% horizontaly and vertically.
+% 3. Fill in words in to the puzzle until solved. 
+% Selecting a slot and a word and unifying the word with the slot 
+% and recursing. Good choices should be made when selecting the best slot to 
+% filling in. 
+
+
+% SWI Prolog loads wrong transpose/2 predicate. 
+% clpfd will ensure that transpose/2 is correct. 
+:- ensure_loaded(library(clpfd)).
+
+
+% TODO: File-Level doc needs more. 
+/**
+ * main/3 is the drive predicate for the program. 
+ * PuzzleFile: file name for the puzzle provided. 
+ * WordlistFile: file name for the wordlist provided.
+ * SolutionFile: file name for the solution that is to be printed. 
+*/
 main(PuzzleFile, WordlistFile, SolutionFile) :-
 	read_file(PuzzleFile, Puzzle),
 	read_file(WordlistFile, Wordlist),
