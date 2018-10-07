@@ -26,7 +26,7 @@ Some rough sketch can be(this idea was written before i started coding):
 ## self_test.sh usage:
     bash test_all.sh -- for all test cases in the dir or
     bash test_all.sh "2 3a 4" -- for some of them
-
+## Purpose of the project and main Algorithm:
     % This is the program for Fillin Puzzles. 
     % The program tries to solve a Fillin Puzzle.
     % A Fillin Puzzle is to provide a puzzle and a list of words, which 
