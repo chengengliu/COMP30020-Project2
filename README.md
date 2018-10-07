@@ -27,9 +27,23 @@ Some rough sketch can be(this idea was written before i started coding):
     bash test_all.sh -- for all test cases in the dir or
     bash test_all.sh "2 3a 4" -- for some of them
 
-## Algorithm truly used in the project: 
-    1.  Find dall underscores in the puzzle and fill the puzzle with logical vairables.
+    % This is the program for Fillin Puzzles. 
+    % The program tries to solve a Fillin Puzzle.
+    % A Fillin Puzzle is to provide a puzzle and a list of words, which 
+    % the player needs to select words to fit in the given puzzle. 
+    % main/3 and IO-code is provided by Peter Schachte.
+    % We are asked to implement solve_puzzle/3 to solve the Fillin Puzzle. 
 
-    2.  Build a list of slots, which each slot is bunch of logical variables, representing a single square of the puzzle. If the same variable is used for the same slot(either in horizontal or vertical direction), it will be unified/simplified(don't know how to say it in English), which Prolog will automatically do (as described in the pdf file).
-
-    3.  Start filling in the words. Main algorithm is that selecting a slot and a word each time, meanwhile traverse the wordlist to pickup the word. Keep track of the minimum number of matching word of the slot and keep updating the number. The word with the samllest matching number will be selected as the best match. 
+    % Algorithm used for solve_puzzle/3 is written below. 
+    % Further algorithm explaination will be written in more depth later 
+    % of the program. 
+    % 1. Replace all underscores with logical variables. 
+    % 2. Build a list of slots, where each slot is a list of logical var
+    % representing a single square in the puzzle. This step is important 
+    % if the same var is used for the same slot in either horizontal or vertical
+    % direction when unifying the var, it will be correctly unified 
+    % horizontaly and vertically.
+    % 3. Fill in words in to the puzzle until solved. 
+    % Selecting a slot and a word and unifying the word with the slot 
+    % and recursing. Good choices should be made when selecting the best slot to 
+    % filling in. 
