@@ -1,16 +1,5 @@
-% You can use this code to get started with your fillin puzzle solver.
-% Make sure you replace this comment with your own documentation.
-
 :- ensure_loaded(library(clpfd)).
-%:- use_module(file_reader).
-
-main(PuzzleFile, WordlistFile, SolutionFile) :-
-	read_file(PuzzleFile, Puzzle),
-	read_file(WordlistFile, Wordlist),
-	valid_puzzle(Puzzle),
-	solve_puzzle(Puzzle, Wordlist, Solved),
-	print_puzzle(SolutionFile, Solved).
-
+% TODO: file-level doc needs more. 
 /**
  * Now it is time to restate the whole algorithm
  * The algorithm should be 
@@ -25,57 +14,92 @@ main(PuzzleFile, WordlistFile, SolutionFile) :-
  * 
 */
 
+main(PuzzleFile, WordlistFile, SolutionFile) :-
+	read_file(PuzzleFile, Puzzle),
+	read_file(WordlistFile, Wordlist),
+	valid_puzzle(Puzzle),
+	solve_puzzle(Puzzle, Wordlist, Solved),
+	print_puzzle(SolutionFile, Solved).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/**
+ * solve_puzzle/3 takes Puzzle and Wordlist as two arguments and FilledPuzzle 
+ * will be the solved solution for the puzzle. It will call fill_with_vars/2,
+ * construct_slots/2 and fill_words/2. As mentioned above, the three steps 
+ * algorithm is done by these three predicates. 
+ * More details about each of the three predicates will be introduced before 
+ * each predicate is used. 
+ * 
+*/
 solve_puzzle(Puzzle, Wordlist, FilledPuzzle):-
     fill_with_vars(Puzzle,FilledPuzzle),
     construct_slots(FilledPuzzle,Slots),
     fill_words(Slots, Wordlist).
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% FilledPuzzle is the same puzzle with the input puzzle, except thst 
-% All '_' will be replaced by logical variable. 
+/**
+ * Using a sequence of operations(like a pipeline) to traverse the puzzle 
+ * to eliminate the undersocres '_'.
+ * FilledPuzzle: is the same puzzle with the input puzzle but every undersocre 
+ * will be replaced by a logical variable. 
+ * Puzzle: input puzzle.
+ * 
+*/
+
 fill_with_vars([],[]).
 fill_with_vars(Puzzle, FilledPuzzle):-
     maplist(fill_row_with_vars, Puzzle, FilledPuzzle).
-% Row is a row of an unfilled puzzle, and FilledRow is filled with 
-% Logical variables. 
+
+
+% Row is a row of an unfilled puzzle, and FilledRow is the row filled with 
+% logical variables. 
 fill_row_with_vars([],[]).
 fill_row_with_vars(Row, FilledRow):-
     maplist(fill_underscore_var, Row, FilledRow).
 
-% Replace all undersocres with logical variables and keep everything else
-% The same. 
+
+% Replace all undersocres with logical variables and keep everything else that
+% is not '_' the same.
 fill_underscore_var('_', _).
-fill_underscore_var(Char, Char):- Char \= '_'.
+fill_underscore_var(Ch, Ch):- Ch \= '_'.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% After we have all the undersocres replaced with logical variables, 
-% It is time to construct slots from the filledPuzzle. 
-% Format is like [[#,_3366,#],[_3384,A,_3396],[#,#,_3420]]
-% Slots if a list of all the slots in both rows and columns of the Puzzle. 
-% This predicate hopefully should find all horizontal and vertical slots 
-% in the puzzle. 
-
-% FilledPuzzle is a list of lists of char, one list per puzzle row. 
+/**
+ * construct_slots/2 will return a list of all slots of the puzzle. 
+ * Slots: is a list of slots in both horizontal and vertical of the puzzle. 
+ * FilledPuzzle: A list of chars that have been fileld with logical variables 
+ * in the previous fill_with_vars/2. 
+*/
 construct_slots(FilledPuzzle, Slots):-
     rows_slots(FilledPuzzle, HorizontalSlots),
-    include(length_more_than1,HorizontalSlots,NewHorizontalSlots),
     transpose(FilledPuzzle, NewFilledPuzzle),
     rows_slots(NewFilledPuzzle, VerticalSlots),
+    % The length of a slot has to be greated than one. 
+    include(length_more_than1,HorizontalSlots,NewHorizontalSlots),
     include(length_more_than1,VerticalSlots,NewVerticalSlots),
     append(NewHorizontalSlots, NewVerticalSlots,Slots).
+
+
+% Helper function. In order to justify if the length of a list is greater than
+% one.  
 length_more_than1(List):-
     length(List,Length),
     Length > 1.
 
-% Slots is a list of all the slots in all Rows of the puzzle. 
-% Rows is a list of lists of Char, one list per row in the puzzle. 
+
+% Slots: is a list of all the slots in all Rows of the puzzle. 
+% This predicate can be reused later when we transpose the puzzle. 
+% Rows: is a list of lists of Char of the puzzle. 
 % Every row os slot of the puzzle will be stored in slots. 
 rows_slots([], []).
 rows_slots([R|Rows], Slots):-
     one_row_slot(R, RowSlots),
     append(RowSlots,TempSlots, Slots),
     rows_slots(Rows, TempSlots).
+
 /**
  * one_row_slot/2 will return Slots which contain a list of slots present 
  * in the Row. aka the Slots is the reuslt of splitting the Row on '#'
@@ -97,12 +121,15 @@ one_row_slot([],[],[]).
 % TODO:  This is where I got stuck....
 one_row_slot([], Acc, [Acc]):- 
     Acc \= [].
+
 % If there is a '#', add the Acc to the list of slots and reset Acc to an empty
 % list.
 one_row_slot([H|Rest], Acc, Slots):-
     H == '#',
     Slots = [Acc|Slots1],
     one_row_slot(Rest,[], Slots1).
+
+
 % If not meeting the '#', keep adding to Acc. 
 one_row_slot([H|Rest], Acc,Slots):-
     %%%%% I found the bug.......... \==
