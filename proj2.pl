@@ -1,19 +1,40 @@
-:- ensure_loaded(library(clpfd)).
-% TODO: file-level doc needs more. 
-/**
- * Now it is time to restate the whole algorithm
- * The algorithm should be 
- * 1. Replace all underscores with logical variables. 
- * 2. Build a list of slots, where each slot is a list of logical var
- * representing a single square in the puzzle. This step is important 
- * if the same var is used for the same slot in either hot or ver when
- * unifying the var, it will be correctly unified hor and ver
- * 3. Fill in words in to the puzzle until solved. 
- * Selecting a slot and a word and unifying the word with the slot 
- * and recursing. Should be careful when choosing the best slot and word. 
- * 
-*/
+% COMP30020 2018 Declarative Programming Project 2 
+% Student: Chengeng Liu     Student ID : 813174
+% IO-code: Peter Schachte
 
+% This is the program for Fillin Puzzles. 
+% The program tries to solve a Fillin Puzzle.
+% A Fillin Puzzle is to provide a puzzle and a list of words, which 
+% the player needs to select words to fit in the given puzzle. 
+% main/3 and IO-code is provided by Peter Schachte.
+% We are asked to implement solve_puzzle/3 to solve the Fillin Puzzle. 
+
+% Algorithm used for solve_puzzle/3 is written below. 
+% Further algorithm explaination will be written in more depth later 
+% of the program. 
+% 1. Replace all underscores with logical variables. 
+% 2. Build a list of slots, where each slot is a list of logical var
+% representing a single square in the puzzle. This step is important 
+% if the same var is used for the same slot in either horizontal or vertical
+% direction when unifying the var, it will be correctly unified 
+% horizontaly and vertically.
+% 3. Fill in words in to the puzzle until solved. 
+% Selecting a slot and a word and unifying the word with the slot 
+% and recursing. Good choices should be made when selecting the best slot to 
+% filling in. 
+
+
+% SWI Prolog loads wrong transpose/2 predicate. 
+% clpfd will ensure that transpose/2 is correct. 
+:- ensure_loaded(library(clpfd)).
+
+
+/**
+ * main/3 is the driver predicate for the program. 
+ * PuzzleFile: file name for the puzzle provided. 
+ * WordlistFile: file name for the wordlist provided.
+ * SolutionFile: file name for the solution that is to be printed. 
+*/
 main(PuzzleFile, WordlistFile, SolutionFile) :-
 	read_file(PuzzleFile, Puzzle),
 	read_file(WordlistFile, Wordlist),
@@ -21,7 +42,7 @@ main(PuzzleFile, WordlistFile, SolutionFile) :-
 	solve_puzzle(Puzzle, Wordlist, Solved),
 	print_puzzle(SolutionFile, Solved).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 /**
  * solve_puzzle/3 takes Puzzle and Wordlist as two arguments and FilledPuzzle 
  * will be the solved solution for the puzzle. It will call fill_with_vars/2,
@@ -37,13 +58,13 @@ solve_puzzle(Puzzle, Wordlist, FilledPuzzle):-
     fill_words(Slots, Wordlist).
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
  * Using a sequence of operations(like a pipeline) to traverse the puzzle 
  * to eliminate the undersocres '_'.
- * FilledPuzzle: is the same puzzle with the input puzzle but every undersocre 
- * will be replaced by a logical variable. 
+ * FilledPuzzle: is the same puzzle with the input puzzle but every 
+ * underscore will be replaced by a logical variable. 
  * Puzzle: input puzzle.
  * 
 */
@@ -60,12 +81,12 @@ fill_row_with_vars(Row, FilledRow):-
     maplist(fill_underscore_var, Row, FilledRow).
 
 
-% Replace all undersocres with logical variables and keep everything else that
-% is not '_' the same.
+% Replace all undersocres with logical variables and keep everything else 
+% that is not '_' the same.
 fill_underscore_var('_', _).
 fill_underscore_var(Ch, Ch):- Ch \= '_'.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
  * construct_slots/2 will return a list of all slots of the puzzle. 
@@ -78,14 +99,14 @@ construct_slots(FilledPuzzle, Slots):-
     transpose(FilledPuzzle, NewFilledPuzzle),
     rows_slots(NewFilledPuzzle, VerticalSlots),
     % The length of a slot has to be greated than one. 
-    include(length_more_than1,HorizontalSlots,NewHorizontalSlots),
-    include(length_more_than1,VerticalSlots,NewVerticalSlots),
+    include(length_,HorizontalSlots,NewHorizontalSlots),
+    include(length_,VerticalSlots,NewVerticalSlots),
     append(NewHorizontalSlots, NewVerticalSlots,Slots).
 
 
-% Helper function. In order to justify if the length of a list is greater than
-% one.  
-length_more_than1(List):-
+% Helper function. In order to justify if the length of a list is greater
+% than one.  
+length_(List):-
     length(List,Length),
     Length > 1.
 
@@ -114,15 +135,16 @@ one_row_slot(Row, Slots):-
  * until it meets a '#'. When meeting a '#', it adds the Acc into Slots and 
  * resets Acc to be empty lists. 
 */
-% Notice that if there is no '#' till the end of the row, then Acc is made into
-% a list with itself. (This is another base case that needs to be handled.)
+% Notice that if there is no '#' till the end of the row, then Acc is made 
+% into a list with itself.(This is another base case that needs 
+% to be handled.)
 % This is different from the seoncd base case. Since the seoncd base case is 
 % just the termination of one_row_slot/3
 one_row_slot([], Acc, [Acc]):- 
     Acc \= [].
 one_row_slot([],[],[]).
-% If there is a '#', add the Acc to the list of slots and reset Acc to an empty
-% list.
+% If there is a '#', add the Acc to the list of slots and reset Acc to an 
+% empty list.
 one_row_slot([H|Rest], Acc, Slots):-
     H == '#',
     Slots = [Acc|Slots1],
@@ -135,11 +157,11 @@ one_row_slot([H|Rest], Acc,Slots):-
     append(Acc,[H],Acc1),
     one_row_slot(Rest,Acc1,Slots).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
  * fill_words/2 is to fill a word in Wordlist to all slots in Slots. 
- * select_best_slot/3 will be called to find the best slot to fill in words. 
+ * select_best_slot/3 will be called to find the best slot to fill in words.
  * Each time we filled one slot with one word, repeat fill_words/2 with the 
  * rest of the slots. The word that has been filled will not be filled again. 
  * The bset slot is the slot that has the fewest matching words in order to 
@@ -163,9 +185,9 @@ fill_words(Slots, Wordlist):-
     
 
 /**
- * select_best_slot/3 will return the best slot, which is defined as the least
- * amount of matching words that can be used to fill(this will reduce the 
-     search space and backtrack space)
+ * select_best_slot/3 will return the best slot, which is defined as the 
+ * least amount of matching words that can be used to fill(this will reduce
+     the search space and backtrack space)
  * The predicate will use select_best_slot/5, which will try to unify a slot
  * with a word. (A word is said to be 'match' only when the word could unify
      the slot).More explaination will be introduced later.
@@ -186,7 +208,8 @@ select_best_slot([H|Rest], Wordlist, Best):-
  * count_/3 will call count_/4 with a Acc.
  * The wordlist will be traversed to check if there is one word that can 
  * be fit into the slot. 
- * MatchNumber: is the number of words in the wordlist that can fit in the slot. 
+ * MatchNumber: is the number of words in the wordlist that can fit in 
+ * the slot. 
  * Slot: is a slot in the puzzle. 
  * Wordlist: is a list of words being filled into the puzzle. 
 
@@ -233,56 +256,76 @@ select_best_slot(Wordlist, MatchNumber, [S|Slots], CurrentBest, Best):-
     ),
     select_best_slot(Wordlist, MatchNumber1, Slots, CurrentBest1, Best).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/**This is the print out part.  
- * TODO: Maybe later separated into another file.
- * 
- * 
- * */
+% IO part. Printing predicates and Reading predicates. 
+% These predicates are provided from starter.pl written by Peter Schachte
+
+/**
+ * print_puzzle/2 
+ * SolutionFile: name of the file that is being printed to. 
+ * Puzzle: this is passed as Solved when print_puzzle/2 is called. This will 
+ * ensure that the whole Puzzle(Solved) to the SolutionFile. 
+*/
 print_puzzle(SolutionFile, Puzzle) :-
 	open(SolutionFile, write, Stream),
 	maplist(print_row(Stream), Puzzle),
 	close(Stream).
 
+/**
+ * print_row/2 will write the Row to Stream that is provided. 
+ * Stream: an opened file in read mode 
+ * Row: a row fo the solved puzzle. 
+*/
 print_row(Stream, Row) :-
 	maplist(put_puzzle_char(Stream), Row),
 	nl(Stream).
-
+/**
+ * put_puzzle_char/2 will write '_' to the Stream if Char is a var. 
+ * If Char is not a var, it will write the Char itself to the Stream. 
+ * Stream: an opened file in read mode
+ * Char: a char
+*/
 put_puzzle_char(Stream, Char) :-
 	(   var(Char)
 	->  put_char(Stream, '_')
 	;   put_char(Stream, Char)
 	).
-
+/**
+ * valid_puzzle/1 verifies that each row in the puzzle has the same 
+ * length. 
+ * Rows: a list of lists and each of the list has the same length. 
+*/
 valid_puzzle([]).
 valid_puzzle([Row|Rows]) :-
 	maplist(samelength(Row), Rows).
 
-
+/**
+ * samelength/2 verifies two lists have the same length. 
+*/
 samelength([], []).
 samelength([_|L1], [_|L2]) :-
 	same_length(L1, L2).
-% solve_puzzle(Puzzle0, Wordlist, Puzzle)
-% should hold when Puzzle is a solved version of Puzzle0, with the
-% empty slots filled in with words from Wordlist.  Puzzle0 and Puzzle
-% should be lists of lists of characters (single-character atoms), one
-% list per puzzle row.  Wordlist is also a list of lists of
-% characters, one list per word.
-%
-% This code is obviously wrong: it just gives back the unfilled puzzle
-% as result.  You'll need to replace this with a working
-% implementation.
 
+/**
+ * read_file/2 will read all contents from Filename line by line. 
+ * Filename: name of the file that is being read. 
+ * Content: list of list of characters. 
+*/
 
 read_file(Filename, Content) :-
 	open(Filename, read, Stream),
 	read_lines(Stream, Content),
 	close(Stream).
 
+/**
+ * read_lines/2 will read all lines of the file. 
+ * Stream: an opened file in read mode. 
+ * Content: list of list of chars. One string per line of the opened stream. 
+*/
 read_lines(Stream, Content) :-
 	read_line(Stream, Line, Last),
-	(   Last = true
+	(   Last = true  % end of file
 	->  (   Line = []
 	    ->  Content = []
 	    ;   Content = [Line]
@@ -290,15 +333,23 @@ read_lines(Stream, Content) :-
 	;  Content = [Line|Content1],
 	    read_lines(Stream, Content1)
 	).
-
+/**
+ * read_line/3 will read a line. Last is a flag, which shows whether the line 
+ * is the last line of the file or not. 
+ * Stream: an opend file in read mode. 
+ * Line: a line of the file that is being read
+ * Last: true/false, works like a boolean type. True if it meets the end 
+ * of file, False if it meets a newline char. 
+ * 
+*/
 read_line(Stream, Line, Last) :-
 	get_char(Stream, Char),
-	(   Char = end_of_file
+	(   Char = end_of_file  % End of file
 	->  Line = [],
 	    Last = true
-	; Char = '\n'
+	; Char = '\n'  % Newline 
 	->  Line = [],
 	    Last = false
-	;   Line = [Char|Line1],
+	;   Line = [Char|Line1],   % Normal read.
 	    read_line(Stream, Line1, Last)
 	).
