@@ -47,3 +47,5 @@ Some rough sketch can be(this idea was written before i started coding):
     % Selecting a slot and a word and unifying the word with the slot 
     % and recursing. Good choices should be made when selecting the best slot to 
     % filling in. 
+## Result:
+    get a total 95/100. 70/70 for correctness/efficiency test and 25/30 for code quality/comment/doc.
